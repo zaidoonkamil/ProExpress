@@ -97,7 +97,6 @@ router.post("/login", upload.none() ,async (req, res) => {
     }
 });
 
-// Endpoint للحصول على جميع المستخدمين
 router.get("/users", async (req, res) => {
     try {
         const users = await User.findAll(); 
@@ -110,7 +109,6 @@ router.get("/users", async (req, res) => {
 
 router.get("/profile", authenticateToken, async (req, res) => {
     try {
-        // جلب بيانات المستخدم بناءً على الـ id الموجود في الـ token
         const user = await User.findByPk(req.user.id);
         if (!user) {
             return res.status(404).json({ error: "User not found" });
@@ -122,7 +120,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
     }
 });
 
-// للحصول على بيانات مستخدم معين
 router.get("/users/:id", authenticateToken ,async (req,res)=>{
     const {id} = req.params;
 
