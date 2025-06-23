@@ -28,6 +28,21 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+router.get("/verify-token", (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.json({ valid: false, message: "Token is missing" });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.json({ valid: false, message: "Invalid token" });
+    }
+    return res.json({ valid: true, data: decoded });
+  });
+});
+
 router.post("/users", upload.none() ,async (req, res) => {
     const { name, phone , location ,password , role = 'user'} = req.body;
     
