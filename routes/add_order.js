@@ -4,6 +4,7 @@ const AddOrder = require('../models/add_order');
 const User = require('../models/user');
 const multer = require("multer");
 const upload = multer();
+const { sendNotificationToRoleWithoutLog } = require('../services/notifications');
 
 
 const provincePrices = {
@@ -51,6 +52,8 @@ router.post("/addOrder",upload.none() , async (req, res) => {
       totalPrice,
       userId,
     });
+
+    await sendNotificationToRoleWithoutLog("admin", `طلب جديد باسم ${customerName}`, "طلب جديد");
 
     res.status(201).json({ message: 'Order added successfully!', order: newOrder });
   } catch (error) {

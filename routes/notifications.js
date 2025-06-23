@@ -1,12 +1,10 @@
 require('dotenv').config();
 const express = require('express');
 const router = express.Router();
-const { sendNotification, sendNotificationToRole } = require('../services/notifications');
+const { sendNotificationToRole } = require('../services/notifications');
 const multer = require("multer");
 const upload = multer();
 const UserDevice = require("../models/user_device");
-const User = require("../models/user");
-const axios = require('axios');
 const NotificationLog = require("../models/notification_log");
 const { Op } = require("sequelize");
 
@@ -33,18 +31,6 @@ router.post("/register-device", async (req, res) => {
         console.error(error);
         res.status(500).json({ error: "حدث خطأ أثناء تسجيل الجهاز" });
     }
-});
-
-router.post('/send-notification', upload.none(), (req, res) => {
-    const { title, message } = req.body;
-
-    if (!message) {
-        return res.status(400).json({ error: 'message مطلوب' });
-    }
-
-    sendNotification(message, title);
-
-    res.json({ success: true, message: '✅ Notification sent to all devices!' });
 });
 
 router.post('/send-notification-to-role', upload.none(), async (req, res) => {

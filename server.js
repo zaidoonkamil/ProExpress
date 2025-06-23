@@ -5,7 +5,7 @@ const addOrdersRouter = require("./routes/add_order");
 const orderRouter = require('./routes/order');
 const adsRoutes = require("./routes/ads");
 const dashboardRoutes = require("./routes/dashboard.js");
-//const notifications = require("./routes/notifications.js");
+const notifications = require("./routes/notifications.js");
 
 
 const app = express();
@@ -22,7 +22,7 @@ app.use("/", addOrdersRouter);
 app.use("/", orderRouter);
 app.use("/", adsRoutes);
 app.use("/", dashboardRoutes);
-//app.use("/", notifications);
+app.use("/", notifications);
 
 
 app.listen( 5000 , () => {

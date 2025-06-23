@@ -2,6 +2,7 @@ const express = require("express");
 const Ads = require("../models/ads");
 const router = express.Router();
 const upload = require("../middlewares/uploads");
+const { sendNotificationToRole } = require('../services/notifications');
 
 router.post("/ads",upload.array("images",5) , async (req, res) => {
     const { name } = req.body;
@@ -13,6 +14,8 @@ router.post("/ads",upload.array("images",5) , async (req, res) => {
         const ads = await Ads.create({
             images,
         });
+        
+        await sendNotificationToRole("user", description, name );
 
         res.status(201).json({ message: "ads created successfully", ads });
     } catch (err) {

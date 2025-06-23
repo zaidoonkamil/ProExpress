@@ -3,7 +3,7 @@ const router = express.Router();
 const AddOrder = require("../models/add_order");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-
+const { sendNotificationToUser } = require("../services/notifications");
 
 const authenticateToken = (req, res, next) => {
     const token = req.headers['authorization'];
@@ -48,6 +48,8 @@ router.put("/orders/:orderId", authenticateToken, async (req, res) => {
       }
 
       await order.update({ status });
+
+      await sendNotificationToUser(order.userId, `تم تحديث حالة طلبك إلى ${status}`, "تحديث الطلب");
 
       res.status(200).json({
           message: `Order status updated from ${currentStatus} to ${status}`,
@@ -254,7 +256,6 @@ router.get("/ordersCanceled", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch pending orders", error: error.message });
   }
 });
-
 
 router.get("/orders", async (req, res) => {
   try {
