@@ -22,7 +22,7 @@ router.put("/orders/:orderId", authenticateToken, async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  const validStatuses = ["pending", "Delivery", "completed", "canceled"];
+const validStatuses = ["قيد الانتظار","قيد التوصيل","واصل جزئي","راجع جزئي","تم التسليم","راجع"];
   if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid status" });
   }
@@ -33,19 +33,11 @@ router.put("/orders/:orderId", authenticateToken, async (req, res) => {
           return res.status(404).json({ error: "Order not found" });
       }
 
-      if (req.user.role !== "admin" && order.userId !== req.user.id) {
+      if (req.user.role !== "admin" && req.user.role !== "delivery" &&  order.userId !== req.user.id) {
           return res.status(403).json({ error: "Access denied, you are not the owner of this order" });
       }
 
       const currentStatus = order.status;
-
-      if (
-          (currentStatus === "pending" && status !== "Delivery") ||
-          (currentStatus === "Delivery" && !["completed", "canceled"].includes(status)) ||
-          (["completed", "canceled"].includes(currentStatus))
-      ) {
-          return res.status(400).json({ error: `Cannot change order status from ${currentStatus} to ${status}` });
-      }
 
       await order.update({ status });
 
@@ -127,7 +119,7 @@ router.get("/ordersPending", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
     const pendingOrders = await AddOrder.findAndCountAll({
-      where: { status: "pending" },
+      where: { status: "قيد الانتظار" },
       limit: limit,
       offset: offset,
       order: [["createdAt", "DESC"]],
@@ -135,7 +127,6 @@ router.get("/ordersPending", async (req, res) => {
         {
           model: User,
           as: "user",
-         // required: true,
           attributes: { exclude: ["password"] },
         },
       ],
@@ -161,7 +152,7 @@ router.get("/ordersDelivery", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
     const pendingOrders = await AddOrder.findAndCountAll({
-      where: { status: "Delivery" },
+      where: { status: "قيد التوصيل" },
       limit: limit,
       offset: offset,
       order: [["createdAt", "DESC"]],
@@ -195,7 +186,7 @@ router.get("/ordersCompleted", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
     const pendingOrders = await AddOrder.findAndCountAll({
-      where: { status: "completed" },
+      where: { status: "تم التسليم" },
       limit: limit,
       offset: offset,
       order: [["createdAt", "DESC"]],
@@ -203,7 +194,6 @@ router.get("/ordersCompleted", async (req, res) => {
         {
           model: User,
           as: "user",
-         // required: true,
           attributes: { exclude: ["password"] },
         },
       ],
@@ -229,7 +219,7 @@ router.get("/ordersCanceled", async (req, res) => {
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
     const pendingOrders = await AddOrder.findAndCountAll({
-      where: { status: "canceled" },
+      where: { status: "راجع" },
       limit: limit,
       offset: offset,
       order: [["createdAt", "DESC"]],
@@ -237,7 +227,6 @@ router.get("/ordersCanceled", async (req, res) => {
         {
           model: User,
           as: "user",
-         // required: true,
           attributes: { exclude: ["password"] },
         },
       ],

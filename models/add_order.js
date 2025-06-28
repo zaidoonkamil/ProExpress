@@ -34,9 +34,9 @@ const AddOrder = sequelize.define('AddOrder', {
     defaultValue: 0,
   },
   status: {
-    type: DataTypes.ENUM("pending", "Delivery", "completed", "canceled"),
+    type: DataTypes.ENUM("قيد الانتظار", "قيد التوصيل", "واصل جزئي", "راجع جزئي", "تم التسليم", "راجع"),
     allowNull: false,
-    defaultValue: "pending"
+    defaultValue: "قيد الانتظار"
 }
 }, {
   timestamps: true,

@@ -44,7 +44,7 @@ router.post("/addOrder",upload.none() , async (req, res) => {
     const newOrder = await AddOrder.create({
       customerName,
       phoneNumber,
-      status: 'pending',
+      status: "قيد الانتظار",
       province,
       address,
       price,

@@ -6,10 +6,10 @@ router.get('/stats', async (req, res) => {
   try {
     const totalOrders = await AddOrder.count();
 
-    const pendingOrders = await AddOrder.count({ where: { status: 'pending' } });
-    const deliveryOrders = await AddOrder.count({ where: { status: 'Delivery' } });
-    const canceledOrders = await AddOrder.count({ where: { status: 'canceled' } });
-    const completedOrders = await AddOrder.count({ where: { status: 'completed' } });
+    const pendingOrders = await AddOrder.count({ where: { status: "قيد الانتظار" } });
+    const deliveryOrders = await AddOrder.count({ where: { status: "قيد التوصيل" } });
+    const canceledOrders = await AddOrder.count({ where: { status: "راجع" } });
+    const completedOrders = await AddOrder.count({ where: { status: "تم التسليم" } });
 
     const totalUsers = await User.count();
 
@@ -69,7 +69,7 @@ router.get('/stats/:userId', async (req, res) => {
       console.error('❌ Error fetching user stats:', error);
       res.status(500).json({ error: 'Internal Server Error' });
     }
-  });
+});
 
   
 module.exports = router;
