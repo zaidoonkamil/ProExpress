@@ -85,7 +85,6 @@ router.post("/login", upload.none() ,async (req, res) => {
             return res.status(400).json({ error: "Invalid phone" });
         }
 
-        // التحقق من صحة كلمة المرور
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if (!isPasswordValid) {
@@ -138,7 +137,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 router.get("/users/:id", authenticateToken ,async (req,res)=>{
     const {id} = req.params;
 
-    // التحقق من أن المستخدم الذي يحاول الوصول إلى البيانات هو نفس المستخدم الذي يتم جلب بياناته
     if (req.user.id !== parseInt(id)) {
         return res.status(403).json({ error: "Access denied, you are not authorized to view this user's data" });
     }
@@ -155,7 +153,6 @@ router.get("/users/:id", authenticateToken ,async (req,res)=>{
     }
     }
 );
-
 
 router.delete("/users/:id", async (req, res) => {
     const { id } = req.params;

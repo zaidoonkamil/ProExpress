@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { User, AddOrder } = require('../models');
+const { sequelize } = require('../models');
 
 router.get('/stats', async (req, res) => {
   try {
@@ -58,13 +59,26 @@ router.get('/stats/:userId', async (req, res) => {
         where: { userId, status: 'completed' },
       });
   
-      res.json({
-        totalOrders,
-        pendingOrders,
-        deliveryOrders,
-        canceledOrders,
-        completedOrders,
+      const totalAmounts = await AddOrder.findAll({
+      where: { userId },
+      attributes: [
+          [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalOrderAmount'],
+          [sequelize.fn('SUM', sequelize.col('deliveryPrice')), 'totalDeliveryAmount'],
+          [sequelize.fn('SUM', sequelize.col('price')), 'totalProductAmount'],
+        ],
+        raw: true,
       });
+
+    res.json({
+      totalOrders,
+      pendingOrders,
+      deliveryOrders,
+      canceledOrders,
+      completedOrders,
+      totalOrderAmount: totalAmounts[0].totalOrderAmount || 0,
+      totalDeliveryAmount: totalAmounts[0].totalDeliveryAmount || 0,
+      totalProductAmount: totalAmounts[0].totalProductAmount || 0,
+    });
     } catch (error) {
       console.error('❌ Error fetching user stats:', error);
       res.status(500).json({ error: 'Internal Server Error' });
