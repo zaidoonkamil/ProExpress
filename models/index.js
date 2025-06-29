@@ -1,8 +1,8 @@
-const AddOrder = require('../models/add_order');
-const User = require('../models/user');
-const Ads = require('../models/ads');
-const NotificationLog = require('../models/notification_log');
-const UserDevice = require('../models/user_device');
+const Ads = require("./ads");
+const AddOrder = require("./add_order");
+const User = require("./user");
+const NotificationLog = require("./notification_log");
+const UserDevice = require("./user_device");
 
 User.hasMany(AddOrder, { foreignKey: 'userId', onDelete: 'CASCADE', as: 'statsOrders' });
 AddOrder.belongsTo(User, { foreignKey: 'userId', as: 'statsUser' });
