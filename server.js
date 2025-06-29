@@ -1,6 +1,11 @@
 const express = require("express");
 const sequelize = require("./config/db");
-require("./models/index.js");
+
+require('../models/add_order');
+require('../models/user');
+require('../models/ads');
+require('../models/notification_log');
+require('../models/user_device');
 
 const usersRouter = require("./routes/user");
 const addOrdersRouter = require("./routes/add_order");
