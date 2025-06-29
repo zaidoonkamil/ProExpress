@@ -11,8 +11,7 @@ const notifications = require("./routes/notifications.js");
 const app = express();
 app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
-console.log("===================================================")
-sequelize.sync({  force: true })
+sequelize.sync({  alter: true })
     .then(() => console.log("✅ Database & User table synced!"))
     .catch(err => console.error("❌ Error syncing database:", err));
 
