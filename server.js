@@ -3,7 +3,7 @@ const sequelize = require("./config/db");
 const usersRouter = require("./routes/user");
 const addOrdersRouter = require("./routes/add_order");
 const orderRouter = require('./routes/order');
-const adsRoutes = require("./routes/ads");
+const adsRoutes = require("./routes/ads.js");
 const dashboardRoutes = require("./routes/dashboard.js");
 const notifications = require("./routes/notifications.js");
 
@@ -12,7 +12,7 @@ const app = express();
 app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
 
-sequelize.sync({  force: false })
+sequelize.sync({  force: true })
     .then(() => console.log("✅ Database & User table synced!"))
     .catch(err => console.error("❌ Error syncing database:", err));
 
