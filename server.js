@@ -3,9 +3,10 @@ const sequelize = require("./config/db");
 const usersRouter = require("./routes/user");
 const addOrdersRouter = require("./routes/add_order");
 const orderRouter = require('./routes/order');
-const adsRoutes = require("./routes/ads.js");
+const adsRoutes = require("./routes/ads");
 const dashboardRoutes = require("./routes/dashboard.js");
 const notifications = require("./routes/notifications.js");
+const models = require("./models/index.js");
 
 
 const app = express();
