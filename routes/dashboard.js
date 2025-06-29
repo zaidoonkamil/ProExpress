@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { User, AddOrder } = require('../models');
-const { sequelize } = require('../models');
+const sequelize = require("../config/db");
 
 router.get('/stats', async (req, res) => {
   try {
@@ -44,19 +44,19 @@ router.get('/stats/:userId', async (req, res) => {
       const totalOrders = await AddOrder.count({ where: { userId } });
   
       const pendingOrders = await AddOrder.count({
-        where: { userId, status: 'pending' },
+  where: { userId, status: 'قيد الانتظار' },
       });
   
       const deliveryOrders = await AddOrder.count({
-        where: { userId, status: 'Delivery' },
+  where: { userId, status: 'قيد التوصيل' },
       });
 
       const canceledOrders = await AddOrder.count({
-        where: { userId, status: 'canceled' },
+  where: { userId, status: 'راجع' },
       });
   
       const completedOrders = await AddOrder.count({
-        where: { userId, status: 'completed' },
+  where: { userId, status: 'تم التسليم' },
       });
   
       const totalAmounts = await AddOrder.findAll({
@@ -104,6 +104,7 @@ router.get('/stats/delivery/:deliveryId', async (req, res) => {
       where: { deliveryId, status: 'تم التسليم' },
     });
 
+
     const totalAmounts = await AddOrder.findOne({
       where: { deliveryId },
       attributes: [
@@ -118,6 +119,7 @@ router.get('/stats/delivery/:deliveryId', async (req, res) => {
       totalOrders,
       pendingDelivery,
       acceptedDelivery,
+      // rejectedDelivery, // فعلها إذا أضفت حالة الرفض
       completedOrders,
       totalOrderAmount: totalAmounts.totalOrderAmount || 0,
       totalDeliveryAmount: totalAmounts.totalDeliveryAmount || 0,

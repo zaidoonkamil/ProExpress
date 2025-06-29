@@ -4,17 +4,6 @@ const { AddOrder, User } = require("../models");
 const jwt = require("jsonwebtoken");
 const { sendNotificationToUser } = require("../services/notifications");
 
-const authenticateToken = (req, res, next) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ error: "Access denied, no token provided" });
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid token" });
-        req.user = user;
-        next();
-    });
-};
-
 
 router.put("/assign-order/:orderId", async (req, res) => {
   try {
@@ -94,7 +83,7 @@ router.put("/order-response/:orderId", async (req, res) => {
   }
 });
 
-router.get("/delivery-orders/:deliveryId", authenticateDelivery, async (req, res) => {
+router.get("/delivery-orders/:deliveryId", async (req, res) => {
   try {
     const { deliveryId } = req.params;
 
@@ -167,8 +156,7 @@ router.put("/orders/remove-from-delivery/:deliveryId", async (req, res) => {
 });
 
 
-router.put("/orders/:orderId", authenticateToken, async (req, res) => {
-  console.log("🔍 Body received:", req.body);
+router.put("/orders/:orderId", async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
