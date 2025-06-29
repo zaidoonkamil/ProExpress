@@ -33,6 +33,19 @@ const AddOrder = sequelize.define('AddOrder', {
     allowNull: false,
     defaultValue: 0,
   },
+  deliveryId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,   
+    references: {
+      model: 'users',
+      key: 'id'
+    }
+  },
+  deliveryStatus: {
+    type: DataTypes.ENUM("في الانتظار", "مقبول" ),
+    allowNull: true ,
+    defaultValue: "في الانتظار" ,
+  },
   status: {
     type: DataTypes.ENUM("قيد الانتظار", "قيد التوصيل", "واصل جزئي", "راجع جزئي", "تم التسليم", "راجع"),
     allowNull: false,
@@ -44,5 +57,8 @@ const AddOrder = sequelize.define('AddOrder', {
 
 User.hasMany(AddOrder, { foreignKey: 'userId', onDelete: 'CASCADE' , as: "orders" });
 AddOrder.belongsTo(User, { foreignKey: 'userId', as: "user" });
+
+User.hasMany(AddOrder, { foreignKey: 'deliveryId', as: "assignedOrders" });
+AddOrder.belongsTo(User, { foreignKey: 'deliveryId', as: "delivery" });
 
 module.exports = AddOrder;

@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const AddOrder = require("../models/add_order");
-const User = require("../models/user");
+const { AddOrder, User } = require("../models");
 const jwt = require("jsonwebtoken");
 const { sendNotificationToUser } = require("../services/notifications");
 
@@ -15,6 +14,157 @@ const authenticateToken = (req, res, next) => {
         next();
     });
 };
+
+
+router.put("/assign-order/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { deliveryId } = req.body;
+
+    const order = await AddOrder.findByPk(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "الطلب غير موجود" });
+    }
+
+    const deliveryUser = await User.findByPk(deliveryId);
+    if (!deliveryUser || deliveryUser.role !== "delivery") {
+      return res.status(404).json({ message: "الدلفري غير موجود أو ليس دلفري" });
+    }
+
+    await order.update({
+      deliveryId: deliveryId,
+      deliveryStatus: "في الانتظار",
+    });
+
+    await sendNotificationToUser(deliveryId, "طلب جديد بانتظارك", "طلب جديد تم توجيهه إليك");
+
+    res.status(200).json({
+      message: `تم توجيه الطلب رقم ${orderId} إلى الدلفري ${deliveryUser.name}`,
+      order,
+    });
+
+  } catch (error) {
+    console.error("❌ Error assigning order:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء توجيه الطلب", error: error.message });
+  }
+});
+
+router.put("/order-response/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ["مقبول", "مرفوض"];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: "حالة غير صالحة، اختر مقبول أو مرفوض فقط" });
+    }
+
+    const order = await AddOrder.findByPk(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "الطلب غير موجود" });
+    }
+
+    if (order.deliveryId !== req.user.id) {
+      return res.status(403).json({ error: "ليس لديك صلاحية لهذا الطلب" });
+    }
+
+    if (order.deliveryStatus !== "في الانتظار") {
+      return res.status(400).json({ error: "لا يمكن تعديل الطلب إلا في حالة الانتظار" });
+    }
+
+    if (status === "مرفوض") {
+      await order.update({
+        deliveryStatus: "في الانتظار",
+        deliveryId: null,
+        status: "قيد الانتظار" 
+      });
+      return res.status(200).json({ message: "تم رفض الطلب وإعادته إلى قائمة الانتظار" });
+
+    } else if (status === "مقبول") {
+      await order.update({ deliveryStatus: "مقبول" });
+      return res.status(200).json({ message: "تم قبول الطلب بنجاح" });
+    }
+
+
+    res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
+
+  } catch (error) {
+    console.error("❌ Error updating delivery response:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء تحديث حالة الطلب", error: error.message });
+  }
+});
+
+router.get("/delivery-orders/:deliveryId", authenticateDelivery, async (req, res) => {
+  try {
+    const { deliveryId } = req.params;
+
+    if (req.user.id != deliveryId) {
+      return res.status(403).json({ error: "ليس لديك صلاحية لعرض هذه الطلبات" });
+    }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+
+    const orders = await AddOrder.findAndCountAll({
+      where: { deliveryId },
+      limit,
+      offset,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      orders: orders.rows,
+      pagination: {
+        totalOrders: orders.count,
+        currentPage: page,
+        totalPages: Math.ceil(orders.count / limit),
+      },
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching delivery orders:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات", error: error.message });
+  }
+});
+
+router.put("/orders/remove-from-delivery/:deliveryId", async (req, res) => {
+  try {
+    const { deliveryId } = req.params;
+
+    // تحقق من وجود الدلفري (اختياري)
+    const deliveryUser = await User.findByPk(deliveryId);
+    if (!deliveryUser || deliveryUser.role !== "delivery") {
+      return res.status(404).json({ message: "الدلفري غير موجود أو ليس دلفري" });
+    }
+
+    // تحديث الطلبات المرتبطة بهذا الدلفري
+    const [affectedRows] = await AddOrder.update(
+      {
+        deliveryId: null,
+        deliveryStatus: "في الانتظار"
+      },
+      {
+        where: { deliveryId }
+      }
+    );
+
+    res.status(200).json({
+      message: `تم إزالة ${affectedRows} طلب/طلبات من هذا الدلفري وإعادتها إلى في الانتظار`
+    });
+
+  } catch (error) {
+    console.error("❌ خطأ أثناء إزالة الطلبات من الدلفري:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء إزالة الطلبات من الدلفري", error: error.message });
+  }
+});
 
 
 router.put("/orders/:orderId", authenticateToken, async (req, res) => {

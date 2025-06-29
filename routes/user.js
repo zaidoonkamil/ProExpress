@@ -171,4 +171,18 @@ router.delete("/users/:id", async (req, res) => {
     }
 });
 
+router.get("/delivery-users", async (req, res) => {
+  try {
+    const deliveryUsers = await User.findAll({
+      where: { role: "delivery" },  
+      attributes: { exclude: ["password"] } 
+    });
+
+    res.status(200).json(deliveryUsers);
+  } catch (err) {
+    console.error("❌ Error fetching delivery users:", err);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
