@@ -6,8 +6,10 @@ const orderRouter = require('./routes/order');
 const adsRoutes = require("./routes/ads");
 const dashboardRoutes = require("./routes/dashboard.js");
 const notifications = require("./routes/notifications.js");
-const models = require("./models/index.js");
 
+require("./models/ads");
+require("./models/add_order");
+require("./models/user");
 
 const app = express();
 app.use(express.json());
