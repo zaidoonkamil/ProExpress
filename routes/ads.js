@@ -5,7 +5,6 @@ const upload = require("../middlewares/uploads");
 const { sendNotificationToRole } = require('../services/notifications');
 
 router.post("/ads",upload.array("images",5) , async (req, res) => {
-    const { name } = req.body;
     try {
         if (!req.files || req.files.length === 0) {
             return res.status(400).json({ error: "جميع الحقول مطلوبة" });
