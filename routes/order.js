@@ -123,10 +123,6 @@ router.get("/delivery-orders/:deliveryId", async (req, res) => {
   try {
     const { deliveryId } = req.params;
 
-    if (req.user.id != deliveryId) {
-      return res.status(403).json({ error: "ليس لديك صلاحية لعرض هذه الطلبات" });
-    }
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const offset = (page - 1) * limit;
