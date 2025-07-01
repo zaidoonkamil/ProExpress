@@ -5,6 +5,39 @@ const { sendNotificationToUser } = require("../services/notifications");
 const multer = require("multer");
 const upload = multer();
 
+
+router.put("/orders/:orderId",upload.none(), async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+
+const validStatuses = ["قيد الانتظار","قيد التوصيل","واصل جزئي","راجع جزئي","تم التسليم","راجع"];
+  if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+  }
+
+  try {
+    const order = await AddOrder.findByPk(orderId);
+    if (!order) {
+          return res.status(404).json({ error: "Order not found" });
+      }
+
+      const currentStatus = order.status;
+
+      await order.update({ status });
+
+      await sendNotificationToUser(order.userId, `تم تحديث حالة طلبك إلى ${status}`, "تحديث الطلب");
+
+      res.status(200).json({
+          message: `Order status updated from ${currentStatus} to ${status}`,
+          order
+      });
+
+  } catch (err) {
+      console.error("❌ Error updating order status:", err);
+      res.status(500).json({ error: "An error occurred while updating the order status" });
+  }
+});
+
 router.put("/assign-order/:orderId", async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -152,43 +185,6 @@ router.put("/orders/remove-from-delivery/:deliveryId", async (req, res) => {
   } catch (error) {
     console.error("❌ خطأ أثناء إزالة الطلبات من الدلفري:", error);
     res.status(500).json({ message: "حدث خطأ أثناء إزالة الطلبات من الدلفري", error: error.message });
-  }
-});
-
-
-router.put("/orders/:orderId",upload.none(), async (req, res) => {
-  const { orderId } = req.params;
-  const { status } = req.body;
-
-const validStatuses = ["قيد الانتظار","قيد التوصيل","واصل جزئي","راجع جزئي","تم التسليم","راجع"];
-  if (!status || !validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
-  }
-
-  try {
-    const order = await AddOrder.findByPk(orderId);
-    if (!order) {
-          return res.status(404).json({ error: "Order not found" });
-      }
-
-      if (req.user.role !== "admin" && req.user.role !== "delivery" &&  order.userId !== req.user.id) {
-          return res.status(403).json({ error: "Access denied, you are not the owner of this order" });
-      }
-
-      const currentStatus = order.status;
-
-      await order.update({ status });
-
-      await sendNotificationToUser(order.userId, `تم تحديث حالة طلبك إلى ${status}`, "تحديث الطلب");
-
-      res.status(200).json({
-          message: `Order status updated from ${currentStatus} to ${status}`,
-          order
-      });
-
-  } catch (err) {
-      console.error("❌ Error updating order status:", err);
-      res.status(500).json({ error: "An error occurred while updating the order status" });
   }
 });
 
