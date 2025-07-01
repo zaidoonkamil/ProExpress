@@ -71,7 +71,7 @@ router.put("/assign-order/:orderId", upload.none(), async (req, res) => {
   }
 });
 
-router.put("/order-response/:orderId", async (req, res) => {
+router.put("/order-response/:orderId", upload.none(), async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
