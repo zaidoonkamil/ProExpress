@@ -38,7 +38,7 @@ const validStatuses = ["قيد الانتظار","قيد التوصيل","واص
   }
 });
 
-router.put("/assign-order/:orderId", async (req, res) => {
+router.put("/assign-order/:orderId", upload.none(), async (req, res) => {
   try {
     const { orderId } = req.params;
     const { deliveryId } = req.body;
