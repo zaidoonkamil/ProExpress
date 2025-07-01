@@ -74,11 +74,15 @@ router.put("/assign-order/:orderId", upload.none(), async (req, res) => {
 router.put("/order-response/:orderId", upload.none(), async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { status } = req.body;
+    const { status, deliveryId } = req.body;
 
     const validStatuses = ["مقبول", "مرفوض"];
     if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({ error: "حالة غير صالحة، اختر مقبول أو مرفوض فقط" });
+    }
+
+    if (!deliveryId) {
+      return res.status(400).json({ error: "يجب إرسال deliveryId" });
     }
 
     const order = await AddOrder.findByPk(orderId);
@@ -86,7 +90,7 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
       return res.status(404).json({ message: "الطلب غير موجود" });
     }
 
-    if (order.deliveryId !== req.user.id) {
+    if (order.deliveryId !== parseInt(deliveryId)) {
       return res.status(403).json({ error: "ليس لديك صلاحية لهذا الطلب" });
     }
 
@@ -98,15 +102,13 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
       await order.update({
         deliveryStatus: "في الانتظار",
         deliveryId: null,
-        status: "قيد الانتظار" 
+        status: "قيد الانتظار"
       });
       return res.status(200).json({ message: "تم رفض الطلب وإعادته إلى قائمة الانتظار" });
-
     } else if (status === "مقبول") {
       await order.update({ deliveryStatus: "مقبول" });
       return res.status(200).json({ message: "تم قبول الطلب بنجاح" });
     }
-
 
     res.status(200).json({ message: `تم تحديث حالة الطلب إلى ${status}` });
 
@@ -115,6 +117,7 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
     res.status(500).json({ message: "حدث خطأ أثناء تحديث حالة الطلب", error: error.message });
   }
 });
+
 
 router.get("/delivery-orders/:deliveryId", async (req, res) => {
   try {
