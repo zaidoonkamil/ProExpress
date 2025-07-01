@@ -407,6 +407,72 @@ router.get("/ordersCanceled", async (req, res) => {
   }
 });
 
+router.get("/ordersPartialConnection", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+    const pendingOrders = await AddOrder.findAndCountAll({
+      where: { status: "واصل جزئي" },
+      limit: limit,
+      offset: offset,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      orders: pendingOrders.rows,
+      pagination: {
+        totalOrders: pendingOrders.count,
+        currentPage: page,
+        totalPages: Math.ceil(pendingOrders.count / limit),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching pending orders:", error);
+    res.status(500).json({ message: "Failed to fetch pending orders", error: error.message });
+  }
+});
+
+router.get("/ordersReviewMyPart", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const offset = (page - 1) * limit;
+    const pendingOrders = await AddOrder.findAndCountAll({
+      where: { status: "راجع جزئي" },
+      limit: limit,
+      offset: offset,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: { exclude: ["password"] },
+        },
+      ],
+    });
+
+    res.status(200).json({
+      orders: pendingOrders.rows,
+      pagination: {
+        totalOrders: pendingOrders.count,
+        currentPage: page,
+        totalPages: Math.ceil(pendingOrders.count / limit),
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error fetching pending orders:", error);
+    res.status(500).json({ message: "Failed to fetch pending orders", error: error.message });
+  }
+});
+
 router.get("/orders", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
