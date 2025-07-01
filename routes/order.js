@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { AddOrder, User } = require("../models");
-const jwt = require("jsonwebtoken");
 const { sendNotificationToUser } = require("../services/notifications");
-
+const multer = require("multer");
+const upload = multer();
 
 router.put("/assign-order/:orderId", async (req, res) => {
   try {
@@ -156,7 +156,7 @@ router.put("/orders/remove-from-delivery/:deliveryId", async (req, res) => {
 });
 
 
-router.put("/orders/:orderId", async (req, res) => {
+router.put("/orders/:orderId",upload.none(), async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
