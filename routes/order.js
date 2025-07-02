@@ -168,7 +168,10 @@ router.delete("/orders/remove/:id", upload.none(), async (req, res) => {
 
     if (type === "user") {
       const affectedOrders = await AddOrder.findAll({
-        where: { userId: id, status: { [Op.ne]: "قيد الانتظار" } }
+        where: { 
+          userId: id,
+           status: { [Op.ne]: ["قيد الانتظار", "قيد التوصيل"] }
+           }
       });
 
       let deletedCount = 0;
@@ -188,7 +191,7 @@ router.delete("/orders/remove/:id", upload.none(), async (req, res) => {
 
     } else if (type === "delivery") {
       const affectedOrders = await AddOrder.findAll({
-        where: { deliveryId: id, status: { [Op.ne]: "قيد الانتظار" } }
+        where: { deliveryId: id, status: { [Op.ne]: ["قيد الانتظار", "قيد التوصيل"] } }
       });
 
       let deletedCount = 0;
