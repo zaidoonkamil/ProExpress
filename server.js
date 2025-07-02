@@ -8,15 +8,10 @@ const dashboardRoutes = require("./routes/dashboard.js");
 const notifications = require("./routes/notifications.js");
 const cors = require("cors");
 
-const corsOptions = {
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-
-app.options("*", cors(corsOptions));
+const app = express();
+app.use(cors({
+  origin: "*"
+}));
 
 app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
