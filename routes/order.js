@@ -4,6 +4,7 @@ const { AddOrder, User } = require("../models");
 const { sendNotificationToUser } = require("../services/notifications");
 const multer = require("multer");
 const upload = multer();
+const { Op } = require("sequelize");
 
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
@@ -156,34 +157,59 @@ router.get("/delivery-orders/:deliveryId", async (req, res) => {
   }
 });
 
-router.put("/orders/remove-from-delivery/:deliveryId", async (req, res) => {
+router.delete("/orders/remove/:id", upload.none(), async (req, res) => {
   try {
-    const { deliveryId } = req.params;
+    const { id } = req.params;
+    const { type } = req.query;
 
-    // تحقق من وجود الدلفري (اختياري)
-    const deliveryUser = await User.findByPk(deliveryId);
-    if (!deliveryUser || deliveryUser.role !== "delivery") {
-      return res.status(404).json({ message: "الدلفري غير موجود أو ليس دلفري" });
+    if (!type || (type !== "user" && type !== "delivery")) {
+      return res.status(400).json({ message: "حدد نوع الحذف: type=user أو type=delivery" });
     }
 
-    // تحديث الطلبات المرتبطة بهذا الدلفري
-    const [affectedRows] = await AddOrder.update(
-      {
-        deliveryId: null,
-        deliveryStatus: "في الانتظار"
-      },
-      {
-        where: { deliveryId }
-      }
-    );
+    if (type === "user") {
+      const affectedOrders = await AddOrder.findAll({
+        where: { userId: id, status: { [Op.ne]: "قيد الانتظار" } }
+      });
 
-    res.status(200).json({
-      message: `تم إزالة ${affectedRows} طلب/طلبات من هذا الدلفري وإعادتها إلى في الانتظار`
-    });
+      let deletedCount = 0;
+
+      for (const order of affectedOrders) {
+        if (order.deliveryId === null) {
+          await order.destroy();
+          deletedCount++;
+        } else {
+          await order.update({ userId: null });
+        }
+      }
+
+      return res.status(200).json({
+        message: `تم حذف ${deletedCount} طلب/طلبات تخص هذا المستخدم`
+      });
+
+    } else if (type === "delivery") {
+      const affectedOrders = await AddOrder.findAll({
+        where: { deliveryId: id, status: { [Op.ne]: "قيد الانتظار" } }
+      });
+
+      let deletedCount = 0;
+
+      for (const order of affectedOrders) {
+        if (order.userId === null) {
+          await order.destroy();
+          deletedCount++;
+        } else {
+          await order.update({ deliveryId: null, deliveryStatus: "في الانتظار" });
+        }
+      }
+
+      return res.status(200).json({
+        message: `تم حذف ${deletedCount} طلب/طلبات تخص هذا الدلفري`
+      });
+    }
 
   } catch (error) {
-    console.error("❌ خطأ أثناء إزالة الطلبات من الدلفري:", error);
-    res.status(500).json({ message: "حدث خطأ أثناء إزالة الطلبات من الدلفري", error: error.message });
+    console.error("❌ خطأ أثناء حذف الطلبات:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء حذف الطلبات", error: error.message });
   }
 });
 
@@ -226,29 +252,6 @@ router.get("/orders/:userId", async (req, res) => {
     } catch (error) {
     console.error("❌ Error fetching orders:", error);
     res.status(500).json({ message: "Failed to fetch orders", error: error.message });
-  }
-});
-
-router.delete("/orders/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(404).json({ message: "المستخدم غير موجود" });
-    }
-
-    const deletedOrders = await AddOrder.destroy({
-      where: { userId }
-    });
-
-    res.status(200).json({
-      message: `تم حذف ${deletedOrders} طلب/طلبات لهذا المستخدم`
-    });
-
-  } catch (error) {
-    console.error("❌ خطأ أثناء حذف الطلبات:", error);
-    res.status(500).json({ message: "حدث خطأ أثناء حذف الطلبات", error: error.message });
   }
 });
 
