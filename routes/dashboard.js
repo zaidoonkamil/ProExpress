@@ -91,21 +91,23 @@ router.get('/stats/delivery/:deliveryId', async (req, res) => {
   try {
     const totalOrders = await AddOrder.count({ where: { deliveryId } });
 
-    const pendingDelivery = await AddOrder.count({
+    const pendingOrders = await AddOrder.count({
       where: { deliveryId, deliveryStatus: 'في الانتظار' },
     });
 
-    const acceptedDelivery = await AddOrder.count({
+    const deliveryOrders = await AddOrder.count({
       where: { deliveryId, deliveryStatus: 'مقبول' },
     });
 
+    const canceledOrders = await AddOrder.count({
+      where: { deliveryId, status: 'راجع' },
+    });
 
     const completedOrders = await AddOrder.count({
       where: { deliveryId, status: 'تم التسليم' },
     });
 
-
-    const totalAmounts = await AddOrder.findOne({
+    const totalAmounts = await AddOrder.findAll({
       where: { deliveryId },
       attributes: [
         [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalOrderAmount'],
@@ -117,13 +119,13 @@ router.get('/stats/delivery/:deliveryId', async (req, res) => {
 
     res.json({
       totalOrders,
-      pendingDelivery,
-      acceptedDelivery,
-      // rejectedDelivery, // فعلها إذا أضفت حالة الرفض
+      pendingOrders,
+      deliveryOrders,
+      canceledOrders,
       completedOrders,
-      totalOrderAmount: totalAmounts.totalOrderAmount || 0,
-      totalDeliveryAmount: totalAmounts.totalDeliveryAmount || 0,
-      totalProductAmount: totalAmounts.totalProductAmount || 0,
+      totalOrderAmount: totalAmounts[0].totalOrderAmount || 0,
+      totalDeliveryAmount: totalAmounts[0].totalDeliveryAmount || 0,
+      totalProductAmount: totalAmounts[0].totalProductAmount || 0,
     });
 
   } catch (error) {
