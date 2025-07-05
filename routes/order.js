@@ -6,6 +6,8 @@ const multer = require("multer");
 const upload = multer();
 const { Op } = require("sequelize");
 const PDFDocument = require("pdfkit");
+const path = require("path");
+const fs = require("fs");
 
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
@@ -147,25 +149,34 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
     res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
     doc.pipe(res);
 
-    doc.fontSize(18).text(`طلبات المستخدم: ${user.name}`, { align: "center" });
+    // تحميل الخط
+    const fontPath = path.join(__dirname, "..", "assets", "fonts", "Cairo-Regular.ttf");
+    doc.registerFont("ArabicFont", fontPath);
+
+    // العنوان الرئيسي
+    doc.font("ArabicFont").fontSize(20).text(`طلبات المستخدم: ${user.name}`, {
+      align: "center",
+      lineGap: 10,
+    });
     doc.moveDown(1);
 
     orders.forEach((order, index) => {
-      doc.fontSize(14).text(`طلب رقم: ${order.id}`);
-      doc.fontSize(12)
-        .text(`اسم الزبون: ${order.customerName}`)
-        .text(`الهاتف: ${order.phoneNumber}`)
-        .text(`المحافظة: ${order.province}`)
-        .text(`العنوان: ${order.address}`)
-        .text(`المبلغ: ${order.price}`)
-        .text(`سعر التوصيل: ${order.deliveryPrice}`)
-        .text(`الإجمالي: ${order.totalPrice}`)
-        .text(`الحالة: ${order.status}`)
-        .text(`تاريخ الطلب: ${order.createdAt.toLocaleString("ar-EG")}`);
+      doc.font("ArabicFont").fontSize(14)
+        .text(`طلب رقم: ${order.id}`, { align: "right" })
+        .text(`اسم الزبون: ${order.customerName}`, { align: "right" })
+        .text(`الهاتف: ${order.phoneNumber}`, { align: "right" })
+        .text(`المحافظة: ${order.province}`, { align: "right" })
+        .text(`العنوان: ${order.address}`, { align: "right" })
+        .text(`المبلغ: ${order.price} د.ع`, { align: "right" })
+        .text(`سعر التوصيل: ${order.deliveryPrice} د.ع`, { align: "right" })
+        .text(`الإجمالي: ${order.totalPrice} د.ع`, { align: "right" })
+        .text(`الحالة: ${order.status}`, { align: "right" })
+        .text(`تاريخ الطلب: ${order.createdAt.toLocaleString("ar-EG")}`, { align: "right" });
+
       doc.moveDown(0.5);
 
       if (index !== orders.length - 1) {
-        doc.moveDown(0.5).text("------------------------------------------------", { align: "center" });
+        doc.moveDown(0.5).fontSize(12).text("------------------------------------------------------------", { align: "center" });
         doc.moveDown(0.5);
       }
     });
