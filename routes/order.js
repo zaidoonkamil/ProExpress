@@ -5,6 +5,7 @@ const { sendNotificationToUser } = require("../services/notifications");
 const multer = require("multer");
 const upload = multer();
 const { Op } = require("sequelize");
+const PDFDocument = require("pdfkit");
 
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
@@ -116,6 +117,64 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
   } catch (error) {
     console.error("❌ Error updating delivery response:", error);
     res.status(500).json({ message: "حدث خطأ أثناء تحديث حالة الطلب", error: error.message });
+  }
+});
+
+
+router.get("/orders/print/pdf/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send("المستخدم غير موجود");
+    }
+
+    const orders = await AddOrder.findAll({
+      where: {
+        userId: userId,
+        status: { [Op.notIn]: ["قيد الانتظار", "قيد التوصيل"] },
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (orders.length === 0) {
+      return res.send("لا توجد طلبات صالحة للطباعة لهذا المستخدم.");
+    }
+
+    const doc = new PDFDocument({ margin: 30 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
+    doc.pipe(res);
+
+    doc.fontSize(18).text(`طلبات المستخدم: ${user.name}`, { align: "center" });
+    doc.moveDown(1);
+
+    orders.forEach((order, index) => {
+      doc.fontSize(14).text(`طلب رقم: ${order.id}`);
+      doc.fontSize(12)
+        .text(`اسم الزبون: ${order.customerName}`)
+        .text(`الهاتف: ${order.phoneNumber}`)
+        .text(`المحافظة: ${order.province}`)
+        .text(`العنوان: ${order.address}`)
+        .text(`المبلغ: ${order.price}`)
+        .text(`سعر التوصيل: ${order.deliveryPrice}`)
+        .text(`الإجمالي: ${order.totalPrice}`)
+        .text(`الحالة: ${order.status}`)
+        .text(`تاريخ الطلب: ${order.createdAt.toLocaleString("ar-EG")}`);
+      doc.moveDown(0.5);
+
+      if (index !== orders.length - 1) {
+        doc.moveDown(0.5).text("------------------------------------------------", { align: "center" });
+        doc.moveDown(0.5);
+      }
+    });
+
+    doc.end();
+
+  } catch (error) {
+    console.error("❌ خطأ أثناء توليد PDF:", error);
+    res.status(500).send("حدث خطأ أثناء تجهيز ملف PDF.");
   }
 });
 
