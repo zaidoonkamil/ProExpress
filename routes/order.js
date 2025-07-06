@@ -82,11 +82,13 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
 const totalOrders = orders.length;
 const totalDeliveryPrice = orders.reduce((sum, o) => sum + o.deliveryPrice, 0);
 const totalPrice = orders.reduce((sum, o) => sum + o.price, 0);
+const totalAmount = totalDeliveryPrice + totalPrice;
 
 doc.fontSize(14)
   .text(fixArabicText(`${totalOrders} : الطلبات عدد `), { align: "right" })
-  .text(fixArabicText(`${totalDeliveryPrice} : التوصيل مجموع `), { align: "right" })
-  .text(fixArabicText(`${totalPrice}  : المبالغ مجموع `), { align: "right" });
+  .text(fixArabicText(`${totalDeliveryPrice} : التوصيل مبلغ `), { align: "right" })
+  .text(fixArabicText(`${totalPrice}  : الطلبات مبلغ `), { align: "right" })
+  .text(fixArabicText(`${totalDeliveryPrice} : الكلي المبلغ `), { align: "right" });
 
 doc.end();
 
