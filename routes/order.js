@@ -5,9 +5,77 @@ const { sendNotificationToUser } = require("../services/notifications");
 const multer = require("multer");
 const upload = multer();
 const { Op } = require("sequelize");
-const PDFDocument = require("pdfkit");
-const path = require("path");
-const fs = require("fs");
+const PDFDocument = require('pdfkit');
+const path = require('path');
+const { reshape } = require('arabic-persian-reshaper');
+const bidi = require('bidi-js');
+
+
+router.get("/orders/print/pdf/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findByPk(userId);
+    if (!user) return res.status(404).send("المستخدم غير موجود");
+
+    const orders = await AddOrder.findAll({
+      where: {
+        userId: userId,
+        status: { [Op.notIn]: ["قيد الانتظار", "قيد التوصيل"] }
+      },
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (!orders.length) return res.send("لا توجد طلبات صالحة للطباعة لهذا المستخدم.");
+
+    const doc = new PDFDocument({ margin: 30 });
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
+    doc.pipe(res);
+
+    const fontPath = path.join(__dirname, "..", "fonts", "Cairo-Bold.ttf");
+    doc.registerFont("ArabicFont", fontPath);
+
+    function fixArabicText(text) {
+      try {
+        const reshaped = reshape(text);
+        return bidi.getVisualString(reshaped);
+      } catch {
+        return text;
+      }
+    }
+
+    doc.font("ArabicFont").fontSize(20).text(fixArabicText(`طلبات المستخدم: ${user.name}`), { align: "center" });
+    doc.moveDown(1);
+
+    orders.forEach((order, idx) => {
+      doc.font("ArabicFont").fontSize(14);
+
+      doc.text(`${order.id} : رقم طلب`, { align: "right" });      
+      doc.text(fixArabicText(` ${order.customerName} : الزبون اسم `), { align: "right" });
+      doc.text(fixArabicText(`${order.phoneNumber} : الهاتف `), { align: "right" });
+      doc.text(fixArabicText(`${order.province} : المحافظة `), { align: "right" });
+      doc.text(fixArabicText(`${order.address} : العنوان `), { align: "right" });
+      doc.text(fixArabicText(`${order.price} : المبلغ`), { align: "right" });
+      doc.text(fixArabicText(`${order.deliveryPrice} :  التوصيل سعر`), { align: "right" });
+      doc.text(fixArabicText(`${order.totalPrice} : الإجمالي `), { align: "right" });
+      doc.text(fixArabicText(`${order.status} : الحالة `), { align: "right" });
+
+      doc.moveDown(1);
+
+      if (idx !== orders.length - 1) {
+        doc.fontSize(12).text(fixArabicText("------------------------------------------------------------"), { align: "center" });
+        doc.moveDown(1);
+      }
+    });
+
+    doc.end();
+
+  } catch (error) {
+    console.error("❌ خطأ أثناء توليد PDF:", error);
+    res.status(500).send("حدث خطأ أثناء تجهيز ملف PDF.");
+  }
+});
+
 
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
@@ -123,71 +191,7 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
 });
 
 
-router.get("/orders/print/pdf/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
 
-    const user = await User.findByPk(userId);
-    if (!user) {
-      return res.status(404).send("المستخدم غير موجود");
-    }
-
-    const orders = await AddOrder.findAll({
-      where: {
-        userId: userId,
-        status: { [Op.notIn]: ["قيد الانتظار", "قيد التوصيل"] },
-      },
-      order: [["createdAt", "DESC"]],
-    });
-
-    if (orders.length === 0) {
-      return res.send("لا توجد طلبات صالحة للطباعة لهذا المستخدم.");
-    }
-
-    const doc = new PDFDocument({ margin: 30 });
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
-    doc.pipe(res);
-
-    // تحميل الخط
-    const fontPath = path.join(__dirname, "..", "assets", "fonts", "Cairo-Regular.ttf");
-    doc.registerFont("ArabicFont", fontPath);
-
-    // العنوان الرئيسي
-    doc.font("ArabicFont").fontSize(20).text(`طلبات المستخدم: ${user.name}`, {
-      align: "center",
-      lineGap: 10,
-    });
-    doc.moveDown(1);
-
-    orders.forEach((order, index) => {
-      doc.font("ArabicFont").fontSize(14)
-        .text(`طلب رقم: ${order.id}`, { align: "right" })
-        .text(`اسم الزبون: ${order.customerName}`, { align: "right" })
-        .text(`الهاتف: ${order.phoneNumber}`, { align: "right" })
-        .text(`المحافظة: ${order.province}`, { align: "right" })
-        .text(`العنوان: ${order.address}`, { align: "right" })
-        .text(`المبلغ: ${order.price} د.ع`, { align: "right" })
-        .text(`سعر التوصيل: ${order.deliveryPrice} د.ع`, { align: "right" })
-        .text(`الإجمالي: ${order.totalPrice} د.ع`, { align: "right" })
-        .text(`الحالة: ${order.status}`, { align: "right" })
-        .text(`تاريخ الطلب: ${order.createdAt.toLocaleString("ar-EG")}`, { align: "right" });
-
-      doc.moveDown(0.5);
-
-      if (index !== orders.length - 1) {
-        doc.moveDown(0.5).fontSize(12).text("------------------------------------------------------------", { align: "center" });
-        doc.moveDown(0.5);
-      }
-    });
-
-    doc.end();
-
-  } catch (error) {
-    console.error("❌ خطأ أثناء توليد PDF:", error);
-    res.status(500).send("حدث خطأ أثناء تجهيز ملف PDF.");
-  }
-});
 
 
 router.get("/delivery-orders/:deliveryId", async (req, res) => {

@@ -1,7 +1,10 @@
 {
   "dependencies": {
+    "arabic-persian-reshaper": "^1.0.1",
+    "arabic-reshaper": "^1.1.0",
     "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
+    "bidi-js": "^1.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
