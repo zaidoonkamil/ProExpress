@@ -88,7 +88,7 @@ doc.fontSize(14)
   .text(fixArabicText(`${totalOrders} : الطلبات عدد `), { align: "right" })
   .text(fixArabicText(`${totalDeliveryPrice} : التوصيل مبلغ `), { align: "right" })
   .text(fixArabicText(`${totalPrice}  : الطلبات مبلغ `), { align: "right" })
-  .text(fixArabicText(`${totalDeliveryPrice} : الكلي المبلغ `), { align: "right" });
+  .text(fixArabicText(`${totalAmount} : الكلي المبلغ `), { align: "right" });
 
 doc.end();
 
