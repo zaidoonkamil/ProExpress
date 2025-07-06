@@ -44,13 +44,13 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       }
     }
 
-    doc.font("ArabicFont").fontSize(20).text(fixArabicText(`${user.name} :المستخدم طلبات `), { align: "center" });
+    doc.font("ArabicFont").fontSize(20).text(fixArabicText(`${user.name} : المستخدم طلبات `), { align: "center" });
     doc.moveDown(1);
 
     orders.forEach((order, idx) => {
       doc.font("ArabicFont").fontSize(14);
 
-      doc.text(`${order.id} : رقم طلب`, { align: "right" });      
+      doc.text(`${order.id} : طلب`, { align: "right" });      
       doc.text(fixArabicText(` ${order.customerName} : الزبون اسم `), { align: "right" });
       doc.text(fixArabicText(`${order.phoneNumber} : الهاتف `), { align: "right" });
       doc.text(fixArabicText(`${order.province} : المحافظة `), { align: "right" });
@@ -68,7 +68,22 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       }
     });
 
-    doc.end();
+
+doc.moveDown(1);
+doc.fontSize(16).text(fixArabicText("ملخص الطلبات"), { align: "center" });
+doc.moveDown(0.5);
+
+const totalOrders = orders.length;
+const totalDeliveryPrice = orders.reduce((sum, o) => sum + o.deliveryPrice, 0);
+const totalPrice = orders.reduce((sum, o) => sum + o.price, 0);
+
+doc.fontSize(14)
+  .text(fixArabicText(`${totalOrders} : عدد الطلبات`), { align: "right" })
+  .text(fixArabicText(`${totalDeliveryPrice} د.ع : مجموع التوصيل`), { align: "right" })
+  .text(fixArabicText(`${totalPrice} د.ع : مجموع المبالغ`), { align: "right" });
+
+doc.end();
+
 
   } catch (error) {
     console.error("❌ خطأ أثناء توليد PDF:", error);
