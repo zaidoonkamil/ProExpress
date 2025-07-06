@@ -29,7 +29,7 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
 
     const doc = new PDFDocument({ margin: 30 });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
+    res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}_${Date.now()}.pdf`);
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
     res.setHeader("Pragma", "no-cache");
 
