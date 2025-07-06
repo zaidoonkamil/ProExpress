@@ -44,7 +44,7 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       }
     }
 
-    doc.font("ArabicFont").fontSize(20).text(fixArabicText(`طلبات المستخدم: ${user.name}`), { align: "center" });
+    doc.font("ArabicFont").fontSize(20).text(fixArabicText(`${user.name} :المستخدم طلبات `), { align: "center" });
     doc.moveDown(1);
 
     orders.forEach((order, idx) => {
