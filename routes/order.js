@@ -30,6 +30,9 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
     const doc = new PDFDocument({ margin: 30 });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename=orders_${user.name}.pdf`);
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+
     doc.pipe(res);
 
     const fontPath = path.join(__dirname, "..", "fonts", "Cairo-Bold.ttf");
