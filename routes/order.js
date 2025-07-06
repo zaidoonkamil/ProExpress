@@ -68,6 +68,7 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       }
     });
 
+        doc.fontSize(12).text(fixArabicText("************************************************************"), { align: "center" });
 
 doc.moveDown(1);
 doc.fontSize(16).text(fixArabicText("ملخص الطلبات"), { align: "center" });
