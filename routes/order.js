@@ -7,7 +7,7 @@ const upload = multer();
 const { Op } = require("sequelize");
 const PDFDocument = require('pdfkit');
 const path = require('path');
-const { reshape } = require('arabic-persian-reshaper');
+const arabicReshaper = require('arabic-persian-reshaper');
 const bidi = require('bidi-js');
 
 
@@ -37,7 +37,7 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
 
     function fixArabicText(text) {
       try {
-        const reshaped = reshape(text);
+        const reshaped = arabicReshaper.reshape(text);
         return bidi.getVisualString(reshaped);
       } catch {
         return text;
@@ -68,20 +68,22 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       }
     });
 
-        doc.fontSize(12).text(fixArabicText("************************************************************"), { align: "center" });
+        
+    doc.fontSize(12).text(fixArabicText("************************************************************"), { align: "center" });
 
-doc.moveDown(1);
-doc.fontSize(16).text(fixArabicText("ملخص الطلبات"), { align: "center" });
-doc.moveDown(0.5);
+  
+    doc.moveDown(1);
+    doc.fontSize(16).text(fixArabicText("الطلبات ملخص"), { align: "center" });
+    doc.moveDown(0.5);
 
 const totalOrders = orders.length;
 const totalDeliveryPrice = orders.reduce((sum, o) => sum + o.deliveryPrice, 0);
 const totalPrice = orders.reduce((sum, o) => sum + o.price, 0);
 
 doc.fontSize(14)
-  .text(fixArabicText(`${totalOrders} : عدد الطلبات`), { align: "right" })
-  .text(fixArabicText(`${totalDeliveryPrice} د.ع : مجموع التوصيل`), { align: "right" })
-  .text(fixArabicText(`${totalPrice} د.ع : مجموع المبالغ`), { align: "right" });
+  .text(fixArabicText(`${totalOrders} : الطلبات عدد `), { align: "right" })
+  .text(fixArabicText(`${totalDeliveryPrice} : التوصيل مجموع `), { align: "right" })
+  .text(fixArabicText(`${totalPrice}  : المبالغ مجموع `), { align: "right" });
 
 doc.end();
 
