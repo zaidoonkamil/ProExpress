@@ -317,19 +317,12 @@ router.get("/orders/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
-     const page = parseInt(req.query.page) || 1;
-     const limit = parseInt(req.query.limit) || 5;
-     const offset = (page - 1) * limit;
-
-        
     const userWithOrders = await User.findByPk(userId, {
-        attributes: { exclude: ["password"] },
+      attributes: { exclude: ["password"] },
       include: [
         {
           model: AddOrder,
-          as: "orders", 
-          limit: limit,
-          offset: offset, 
+          as: "orders",
           order: [["createdAt", "DESC"]], 
         },
       ],
@@ -338,18 +331,12 @@ router.get("/orders/:userId", async (req, res) => {
     if (!userWithOrders) {
       return res.status(404).json({ message: "User not found" });
     }
-    
-    const totalOrders = await AddOrder.count({ where: { userId } });
 
     res.status(200).json({
       user: userWithOrders,
-      pagination: {
-        totalOrders,
-        currentPage: page,
-        totalPages: Math.ceil(totalOrders / limit),
-      },
     });
-    } catch (error) {
+
+  } catch (error) {
     console.error("❌ Error fetching orders:", error);
     res.status(500).json({ message: "Failed to fetch orders", error: error.message });
   }
