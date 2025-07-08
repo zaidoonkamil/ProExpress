@@ -22,6 +22,15 @@ router.get('/stats', async (req, res) => {
       }
     });
 
+    const totalAmounts = await AddOrder.findAll({
+      attributes: [
+        [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalOrderAmount'],
+        [sequelize.fn('SUM', sequelize.col('deliveryPrice')), 'totalDeliveryAmount'],
+        [sequelize.fn('SUM', sequelize.col('price')), 'totalProductAmount'],
+      ],
+      raw: true,
+    });
+
     res.json({
       totalOrders,
       pendingOrders,
@@ -29,13 +38,18 @@ router.get('/stats', async (req, res) => {
       canceledOrders,
       completedOrders,
       totalUsers,
-      usersWithOrders
+      usersWithOrders,
+      totalOrderAmount: totalAmounts[0].totalOrderAmount || 0,
+      totalDeliveryAmount: totalAmounts[0].totalDeliveryAmount || 0,
+      totalProductAmount: totalAmounts[0].totalProductAmount || 0,
     });
+
   } catch (error) {
     console.error('❌ Error fetching stats:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 router.get('/stats/:userId', async (req, res) => {
     const { userId } = req.params;
