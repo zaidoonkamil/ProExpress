@@ -221,14 +221,8 @@ router.get("/delivery-orders/:deliveryId", async (req, res) => {
   try {
     const { deliveryId } = req.params;
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-    const offset = (page - 1) * limit;
-
-    const orders = await AddOrder.findAndCountAll({
+    const orders = await AddOrder.findAll({
       where: { deliveryId },
-      limit,
-      offset,
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -240,12 +234,7 @@ router.get("/delivery-orders/:deliveryId", async (req, res) => {
     });
 
     res.status(200).json({
-      orders: orders.rows,
-      pagination: {
-        totalOrders: orders.count,
-        currentPage: page,
-        totalPages: Math.ceil(orders.count / limit),
-      },
+      orders: orders,
     });
 
   } catch (error) {
@@ -253,6 +242,7 @@ router.get("/delivery-orders/:deliveryId", async (req, res) => {
     res.status(500).json({ message: "حدث خطأ أثناء جلب الطلبات", error: error.message });
   }
 });
+
 
 router.delete("/orders/remove/:id", upload.none(), async (req, res) => {
   try {
