@@ -7,7 +7,7 @@ const AddOrder = sequelize.define('AddOrder', {
     type: DataTypes.INTEGER,
     primaryKey: true,
     allowNull: false,
-    autoIncrement: fasle,
+    autoIncrement: false,
   },
   customerName: {
     type: DataTypes.STRING,
