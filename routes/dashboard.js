@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { User, AddOrder } = require('../models');
 const sequelize = require("../config/db");
+const { Op } = require("sequelize");
 
 router.get('/stats', async (req, res) => {
   try {
@@ -73,14 +74,17 @@ router.get('/stats/:userId', async (req, res) => {
       });
   
       const totalAmounts = await AddOrder.findAll({
-      where: { userId },
-      attributes: [
-          [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalOrderAmount'],
-          [sequelize.fn('SUM', sequelize.col('deliveryPrice')), 'totalDeliveryAmount'],
-          [sequelize.fn('SUM', sequelize.col('price')), 'totalProductAmount'],
-        ],
-        raw: true,
-      });
+  where: {
+    userId,
+    status: { [Op.notIn]: ['راجع', 'راجع جزئي'] }
+  },
+  attributes: [
+    [sequelize.fn('SUM', sequelize.col('totalPrice')), 'totalOrderAmount'],
+    [sequelize.fn('SUM', sequelize.col('deliveryPrice')), 'totalDeliveryAmount'],
+    [sequelize.fn('SUM', sequelize.col('price')), 'totalProductAmount'],
+  ],
+  raw: true,
+});
 
     res.json({
       totalOrders,
