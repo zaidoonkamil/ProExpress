@@ -3,6 +3,12 @@ const sequelize = require('../config/db');
 const User = require('./user');
 
 const AddOrder = sequelize.define('AddOrder', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    allowNull: false,
+    autoIncrement: fasle,
+  },
   customerName: {
     type: DataTypes.STRING,
     allowNull: false,

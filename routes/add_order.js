@@ -30,18 +30,30 @@ const provincePrices = {
 
 router.post("/addOrder",upload.none() , async (req, res) => {
     try {
-    const { userId, customerName, phoneNumber, province, address, price } = req.body;
+    const { id, userId, customerName, phoneNumber, province, address, price } = req.body;
 
     const user = await User.findByPk(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+    if (!id) {
+      return res.status(400).json({ message: 'يرجى ادخال رقم الطلب' });
+    }
+        
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'معرّف الطلب يجب أن يكون رقمًا' });
+    }
+
+    const existingOrder = await AddOrder.findByPk(id);
+    if (existingOrder) {
+      return res.status(400).json({ message: 'معرّف الطلب مستخدم من قبل' });
+    }
     const numericPrice = parseFloat(price);
     const deliveryPrice = provincePrices[province] || 0;
     const totalPrice = numericPrice + deliveryPrice;
 
     const newOrder = await AddOrder.create({
+      id,
       customerName,
       phoneNumber,
       status: "قيد الانتظار",
