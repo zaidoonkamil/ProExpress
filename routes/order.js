@@ -333,36 +333,24 @@ router.delete("/orders/remove/:id", upload.none(), async (req, res) => {
 router.get("/orders/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
 
-    const user = await User.findByPk(userId, {
+    const userWithOrders = await User.findByPk(userId, {
       attributes: { exclude: ["password"] },
+      include: [
+        {
+          model: AddOrder,
+          as: "orders",
+          order: [["createdAt", "DESC"]], 
+        },
+      ],
     });
 
-    if (!user) {
+    if (!userWithOrders) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // اجلب الطلبات مع التوتال
-    const { count, rows: orders } = await AddOrder.findAndCountAll({
-      where: { userId },
-      order: [["createdAt", "DESC"]],
-      limit,
-      offset,
-    });
-
-    const totalPages = Math.ceil(count / limit);
-
     res.status(200).json({
-      user,
-      orders,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalOrders: count,
-      },
+      user: userWithOrders,
     });
 
   } catch (error) {
@@ -370,7 +358,6 @@ router.get("/orders/:userId", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch orders", error: error.message });
   }
 });
-
 
 router.delete("/orders/:orderId", async (req, res) => {
   try {
