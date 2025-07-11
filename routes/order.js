@@ -54,14 +54,9 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
       doc.font("ArabicFont").fontSize(14);
 
       doc.text(`${order.id} : طلب`, { align: "right" });      
-      doc.text(fixArabicText(` ${order.customerName} : الزبون اسم `), { align: "right" });
-      doc.text(fixArabicText(`${order.phoneNumber} : الهاتف `), { align: "right" });
-      doc.text(fixArabicText(`${order.province} : المحافظة `), { align: "right" });
-      doc.text(fixArabicText(`${order.address} : العنوان `), { align: "right" });
       doc.text(fixArabicText(`${order.price} : المبلغ`), { align: "right" });
       doc.text(fixArabicText(`${order.deliveryPrice} :  التوصيل سعر`), { align: "right" });
       doc.text(fixArabicText(`${order.totalPrice} : الإجمالي `), { align: "right" });
-      doc.text(fixArabicText(`${order.status} : الحالة `), { align: "right" });
 
       doc.moveDown(1);
 
@@ -98,7 +93,6 @@ doc.end();
     res.status(500).send("حدث خطأ أثناء تجهيز ملف PDF.");
   }
 });
-
 
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
@@ -212,9 +206,6 @@ router.put("/order-response/:orderId", upload.none(), async (req, res) => {
     res.status(500).json({ message: "حدث خطأ أثناء تحديث حالة الطلب", error: error.message });
   }
 });
-
-
-
 
 
 router.get("/delivery-orders/:deliveryId", async (req, res) => {
