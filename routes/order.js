@@ -10,6 +10,43 @@ const path = require('path');
 const arabicReshaper = require('arabic-persian-reshaper');
 const bidi = require('bidi-js');
 
+router.get("/orders/:orderId/admin", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await AddOrder.findByPk(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "الطلب غير موجود" });
+    }
+
+    res.status(200).json({ order });
+
+  } catch (error) {
+    console.error("❌ Error fetching order:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء جلب الطلب", error: error.message });
+  }
+});
+
+router.get("/orders/:orderId/user/:userId", async (req, res) => {
+  try {
+    const { orderId, userId } = req.params;
+
+    const order = await AddOrder.findByPk(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "الطلب غير موجود" });
+    }
+
+    if (order.userId !== parseInt(userId)) {
+      return res.status(403).json({ message: "ليس لديك صلاحية للوصول إلى هذا الطلب" });
+    }
+
+    res.status(200).json({ order });
+
+  } catch (error) {
+    console.error("❌ Error fetching order:", error);
+    res.status(500).json({ message: "حدث خطأ أثناء جلب الطلب", error: error.message });
+  }
+});
 
 router.get("/orders/print/pdf/:userId", async (req, res) => {
   try {
@@ -93,7 +130,6 @@ doc.end();
     res.status(500).send("حدث خطأ أثناء تجهيز ملف PDF.");
   }
 });
-
 
 router.put("/orders/:orderId",upload.none(), async (req, res) => {
   const { orderId } = req.params;

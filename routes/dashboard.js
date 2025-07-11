@@ -50,7 +50,6 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-
 router.get('/stats/:userId', async (req, res) => {
     const { userId } = req.params;
   
