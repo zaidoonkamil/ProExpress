@@ -54,13 +54,18 @@ router.get("/orders/print/pdf/:userId", async (req, res) => {
     const user = await User.findByPk(userId);
     if (!user) return res.status(404).send("المستخدم غير موجود");
 
+
     const orders = await AddOrder.findAll({
-      where: {
-        userId: userId,
-        status: { [Op.notIn]: ["قيد الانتظار", "قيد التوصيل"] }
-      },
-      order: [["createdAt", "DESC"]],
-    });
+  where: {
+    userId: userId,
+    status: { 
+      [Op.notIn]: ["قيد الانتظار", "قيد التوصيل", "راجع", "راجع جزئي"]
+    }
+  },
+  order: [["createdAt", "DESC"]],
+});
+
+
 
     if (!orders.length) return res.send("لا توجد طلبات صالحة للطباعة لهذا المستخدم.");
 
