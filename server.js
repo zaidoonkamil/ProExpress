@@ -15,7 +15,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/uploads", express.static("./" + "uploads"));
-sequelize.sync({  alter: true })
+sequelize.sync({  force: true })
     .then(() => console.log("✅ Database & User table synced!"))
     .catch(err => console.error("❌ Error syncing database:", err));
 
